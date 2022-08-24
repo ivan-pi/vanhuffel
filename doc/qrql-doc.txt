@@ -1,0 +1,229 @@
+   SUBROUTINE : QRQL
+
+ 1 PURPOSE:
+
+   The subroutine QRQL diagonalizes the given bidiagonal
+
+              !Q(1) E(2)  0    ...   0  !
+              ! 0   Q(2) E(3)        .  !
+          J = ! .                    .  !                          (1)
+              ! .                   E(p)!
+              ! 0   ...             Q(p)!
+
+   with p = min(M,N) partially, using QR or QL iterations and in such a
+   way that J is splitted into unreduced subbidiagonals Jj whose
+   singular values are either all larger than a given bound or are all
+   smaller than or equal to this bound.
+   The Givens rotations performed on J on the left and right and corres-
+   ponding to each QR or QL iteration step, are postmultiplied into the
+   arrays U and V, if desired.
+
+ 2 SPECIFICATION:
+
+   SUBROUTINE QRQL(U, LDU, V, LDV, M, N, RANK, THETA, Q, E, INUL,
+                   TOL1, TOL2, WANTU, WANTV, IERR, IWARN)
+   INTEGER LDU, LDV, M, N, RANK, IERR, IWARN
+   DOUBLE PRECISION THETA, TOL1, TOL2
+   DOUBLE PRECISION U(LDU,min(M,N)), V(LDV,min(M,N)), Q(min(M,N)),
+                    E(min(M,N))
+   LOGICAL WANTU, WANTV
+   LOGICAL INUL(min(M,N))
+
+ 3 ARGUMENT LIST:
+
+   3.1 ARGUMENTS IN
+
+       U - DOUBLE PRECISION array of DIMENSION (LDU,min(M,N)).
+           The leading M x p part (with p=min(M,N)) of this array con-
+           tains either the leading M x p part of the identity matrix
+           or a left  transformation matrix  applied to the  original
+           matrix of the problem.
+           NOTE that U is changed by the routine if WANTU = .TRUE. and
+           that U is not referenced if WANTU = .FALSE.
+
+       LDU - INTEGER.
+           LDU is the leading dimension of the array U (LDU >= M).
+
+       V - DOUBLE PRECISION array of DIMENSION (LDV,min(M,N)).
+           The leading N x p part (with p=min(M,N)) of this array con-
+           tains either the leading N x p part of the identity matrix
+           or a right transformation matrix  applied to the  original
+           matrix of the problem.
+           NOTE that V is changed by the routine if WANTV = .TRUE. and
+           that V is not referenced if WANTV = .FALSE.
+
+       LDV - INTEGER.
+           LDV is the leading dimension of the array V (LDV >= N).
+
+       M - INTEGER.
+           M is the number of rows of the matrix U.
+
+       N - INTEGER.
+           N is the number of rows of the matrix V.
+
+       RANK - INTEGER.
+           On entry, there are 2 possibilities :
+           i)  RANK <  0: the rank is to be computed by the routine.
+           ii) RANK >= 0: specifies the desired rank of J.
+               If RANK > min(M,N), then the routine call is an empty
+               statement.
+               NOTE that RANK may be overwritten if J has multiple
+                    singular values.
+
+       THETA - DOUBLE PRECISION.
+           On entry, there are 2 possibilities depending on RANK.
+           i)  RANK <  0: THETA specifies an upper bound on the smallest
+               singular values of J. THETA >= 0.
+           ii) RANK >= 0: THETA is an initial estimate for computing an
+               upper bound such that precisely RANK singular values of
+               J are > this bound.
+               If not available, assign a negative value (< 0) to THETA.
+               NOTE that THETA is overwritten.
+
+       Q - DOUBLE PRECISION array of DIMENSION (min(M,N)).
+           Contains the diagonal entries of the bidiagonal J.
+           NOTE that this array is overwritten.
+
+       E - DOUBLE PRECISION array of DIMENSION (min(M,N)).
+           E(i), i=2,...,p, with p=min(M,N), contain the superdiagonal
+           entries of the bidiagonal J. E(1) = 0.
+           NOTE that this array is overwritten.
+
+       INUL - LOGICAL array of DIMENSION (min(M,N)).
+           All elements of INUL must be initialized:
+           INUL(i) = .TRUE. if the i-th column of U and/or V contains
+                            already a computed base vector of the desi-
+                            red singular subspace of the original matrix
+           All other elements of INUL must be set to .FALSE.
+           NOTE that this array is overwritten.
+
+   3.2 ARGUMENTS OUT
+
+       U - DOUBLE PRECISION array of DIMENSION (LDU,min(M,N)).
+           If WANTU = .TRUE., the Givens rotations on the left, corres-
+           ponding to each QR or QL iteration step performed, have been
+           postmultiplied into U.
+           If WANTU = .FALSE., then U is not referenced.
+
+       V - DOUBLE PRECISION array of DIMENSION (LDU,min(M,N)).
+           If WANTV = .TRUE., the Givens rotations on the right, corres-
+           ponding to each QR or QL iteration step performed, have been
+           postmultiplied into V.
+           If WANTV = .FALSE., then V is not referenced.
+
+       RANK - INTEGER.
+           If not specified by the user, then RANK is computed by the
+           routine as the number of singular values > THETA.
+           If specified by the user, then the specified RANK is changed
+           by the routine if the RANK-th and the (RANK+1)-th singular
+           value of A are considered to be equal.
+
+       THETA - DOUBLE PRECISION.
+           If RANK >= 0, then THETA specifies the computed upper bound
+           such that precisely RANK singular values of A are >
+           THETA + TOL1.
+
+       Q - DOUBLE PRECISION array of DIMENSION (min(M,N)).
+           Contains the diagonal entries of the transformed bidiagonal
+           matrix J.
+
+       E - DOUBLE PRECISION array of DIMENSION (min(M,N)).
+           E(i), i=2,...,p, contain the superdiagonal entries of the
+           transformed bidiagonal J. E(1) is unchanged.
+
+       INUL - LOGICAL array of DIMENSION (min(M,N)).
+           The indices of the elements of INUL with value .TRUE. indi-
+           cate the indices of the diagonal entries of J which belong to
+           those subbidiagonals whose singular values are all <= THETA.
+
+   3.4 TOLERANCES
+
+       TOL1 - DOUBLE PRECISION.
+           This parameter defines the multiplicity of singular values by
+           considering all singular values within an interval of length
+           TOL1 as coinciding. TOL1 is used in checking how many singu-
+           lar values are <= THETA. Also in computing an appropriate
+           upper bound THETA by a bisection method, TOL1 is used as stop
+           criterion defining the minimal subinterval length.
+           According to the numerical properties of the SVD, TOL1 must
+           be >= !!J!! x EPS where !!J!! denotes the L2-norm and EPS
+           is the machine precision.
+
+       TOL2 - DOUBLE PRECISION.
+           Working precision for the computations. This parameter
+           specifies that elements Q(i) and E(i), which are <= TOL2 in
+           absolute value, are considered to be zero.
+
+   3.5 MODE PARAMETERS
+
+       WANTU - LOGICAL.
+           If WANTU = .TRUE., the Givens rotations are postmultiplied
+           on the left into U.
+
+       WANTV - LOGICAL.
+           If WANTV = .TRUE., the Givens rotations are postmultiplied
+           on the right into V.
+
+   3.6 ERROR INDICATORS
+
+       IERR - INTEGER.
+           On return, IERR contains 0 unless the routine has failed.
+
+       IWARN - INTEGER.
+           On return, IWARN contains 0 unless RANK has been lowered by
+           the routine.
+
+ 4 ERROR INDICATORS and WARNINGS:
+
+   Errors detected by the routine.
+
+       IERR = 0: successful completion.
+             10: maximum number of QR/QL iteration steps (50) exceeded.
+
+   Warnings given by the routine.
+
+       IWARN = 0: no warnings.
+               1: the rank of the bidiagonal J, specified by the user,
+                  has been lowered because a singular value of multi-
+                  plicity > 1 was found.
+
+ 5 EXTERNAL SUBROUTINES and FUNCTIONS:
+
+   ESTIM, CANCEL, NSINGV, QRSTEP, QLSTEP.
+
+ 6 METHOD DESCRIPTION:
+
+   If the upper bound THETA is not given, THETA is computed such that
+   precisely p - RANK singular values of J are <= THETA, using a bisec-
+   tion method. (p = min(M,N)).
+   QRQL then proceeds as follows.
+   The unreduced subbidiagonals of J(j), where J(j) is the transformed
+   bidiagonal after the j-th iteration step, are classified into the
+   following three classes:
+   - C1 contains the subbidiag. with all sing. values >  THETA,
+   - C2 contains the subbidiag. with all sing. values <= THETA,
+   - C3 contains the subbidiag. with sing. values > THETA and also
+        singular values <= THETA.
+   If C3 is empty, then the partial diagonalization is completed, and
+   RANK is the sum of the dimension of the elements of C1.
+   As long as C3 is not empty, QR or QL iterations are performed on each
+   subbidiagonal of C3, until this subbidiagonal has been splitted into
+   two subbidiagonals. Then these two submatrices are classified and
+   the iterations are restarted.
+   If the upper left diagonal element of the subbidiagonal is larger
+   than its lower right diagonal element, then QL iterations are per-
+   formed, else QR iterations are used. The shift is equal to the mini-
+   mal diagonal element in absolute value. However, if this element is
+   > THETA, the shift is set to zero.
+
+ 7 REFERENCES:
+
+   [1] S. Van Huffel, J. Vandewalle and A. Haegemans, An efficient and
+       reliable algorithm for computing the singular subspace of a
+       matrix associated with its smallest singular values.
+       J. Comput. and Applied Math., 19 (1987), 313 - 330.
+
+***********************************************************************
+
+   1988, February 15.
+

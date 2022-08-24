@@ -1,0 +1,139 @@
+   SUBROUTINE : ESTIM
+
+ 1 PURPOSE:
+
+   The subroutine ESTIM estimates an upper bound THETA using a bisec-
+   tion method such that the bidiagonal J defined by Q and E:
+
+             !Q(1) E(2)  0    ...   0  !
+             ! 0   Q(2) E(3)        .  !
+         J = ! .                    .  !
+             ! .                   E(N)!
+             ! 0   ...             Q(N)!
+
+   has precisely L singular values <= THETA + a given tolerance TOL1.
+
+ 2 SPECIFICATION:
+
+   SUBROUTINE ESTIM(Q, E, N, L, THETA, TOL1, TOL2, IWARN)
+   INTEGER N, L, IWARN
+   DOUBLE PRECISION Q(N), E(N), THETA, TOL1, TOL2
+
+ 3 ARGUMENT LIST:
+
+   3.1 ARGUMENTS IN
+
+       Q - DOUBLE PRECISION array of DIMENSION (N).
+           Contains the diagonal elements of the bidiagonal J.
+
+       E - DOUBLE PRECISION array of DIMENSION (N).
+           E(i), i=2,...,N, contain the superdiagonal elements of the
+           bidiagonal J, E(1) = 0.0D0.
+
+       N - INTEGER.
+           N is the dimension of the bidiagonal J defined by Q and E.
+
+       L - INTEGER.
+           L is the number of singular values of J which must be
+           smaller than or equal to the upper bound computed by ESTIM.
+           NOTE that L may be overwritten.
+
+       THETA - DOUBLE PRECISION
+           THETA is an initial estimate of the upper bound which is to
+           be computed by ESTIM. If THETA < 0, then the initialization
+           is computed by ESTIM.
+           NOTE that THETA is overwritten.
+
+   3.2 ARGUMENTS OUT
+
+       L - INTEGER.
+           On return, L can be increased if the L-th smallest singular
+           value of J has multiplicity > 1. In this case, L is increased
+           by the number of singular values of J which are larger than
+           its L-th smallest one and approach the L-th smallest singular
+           value of J within a distance < TOL1.
+           If L has been increased, a warning is given.
+
+       THETA - DOUBLE PRECISION
+           On return, THETA contains the upper bound computed by ESTIM
+           such that the bidiagonal J has precisely L singular values <=
+           THETA + TOL1.
+
+   3.4 TOLERANCES
+
+       TOL1 - DOUBLE PRECISION.
+           This parameter defines the multiplicity of singular values by
+           considering all singular values within an interval of length
+           TOL1 as coinciding. TOL1 is used in checking how many singu-
+           lar values are <= THETA. Also in computing an appropriate
+           upper bound THETA by a bisection method, TOL1 is used as stop
+           criterion defining the minimal subinterval length.
+
+       TOL2 - DOUBLE PRECISION.
+           This parameter specifies that matrix elements Q(i) and/or
+           E(i), which are <= TOL2 in absolute value, are considered to
+           be zero.
+
+   3.6 ERROR INDICATORS
+
+       IWARN - INTEGER.
+           On return, IWARN = 0 unless the value of L has been
+           increased.
+
+ 4 ERROR INDICATORS and WARNINGS:
+
+   Warning given by the routine:
+
+       IWARN = 0: no warnings.
+       IWARN = 1: the L-th smallest singular value of J coincides
+                  with the (L+1)-th smallest one. Therefore, the
+                  number L of singular values which must be <= the
+                  upper bound computed by ESTIM, has been increased.
+
+ 5 EXTERNAL SUBROUTINES and FUNCTIONS:
+
+   DAMIN, NSINGV.
+
+ 6 METHOD DESCRIPTION:
+
+   Let S(i), i=1,...,N, be the N singular values of the bidiagonal J in
+   decreasing order of magnitude. ESTIM then computes an upper bound T
+   such that S(N-L) > T >= S(N-L+1).
+   This is done as follows (see [2]):
+   First, if the initial estimate of THETA is not specified by the user
+   then the subroutine initializes THETA with an estimate which is
+   close to the requested value of THETA if S(N-L) >> S(N-L+1).
+   Second, a bisection method (see [1, Sec.8.5]) is used which generates
+   a sequence of shrinking intervals [Y,Z] such that
+
+       (number of S(i) <= Y) < L < (number of S(i) <= Z).
+
+   This bisection method is applied to an associated 2N by 2N symmetric
+   tridiagonal matrix T" whose eigenvalues are the singular values of J
+   and their negatives (see METHOD DESCRIPTION of the routine NSINGV).
+   One of the starting values for the bisection method is the initial
+   value of THETA. If this value is an upper bound, then the initial
+   lower bound is set to zero, else the initial upper bound is computed
+   from the Gershgorin Circle Theorem [1, Theorem 7.2-1], applied to T".
+   The computation of the "number of S(i) <= Y (or Z)" is accomplished
+   by the routine NSINGV and is based on applying Sylvester's Law of
+   Inertia or equivalently Sturm sequences [1, Sec.8.5] to the associ-
+   ated matrix T" (see METHOD DESCRIPTION of NSINGV).
+   If at a certain moment Z-Y < TOL1, then at least 2 singular values
+   of J lie in the interval [Y,Z] within a distance < TOL1 from each
+   other. In this case, S(N-L) and S(N-L+1) are assumed to coincide.
+   Then, the upper bound T is set to the value of Z , the value of L is
+   increased and a warning is given to the user.
+
+ 7 REFERENCES:
+
+   [1] G.H. Golub and C.F. Van Loan, Matrix Computations. The Johns
+       Hopkins University Press, Baltimore, Maryland (1983).
+   [2] S. Van Huffel  and J. Vandewalle, The Partial Total Least
+       Squares Algorithm. J. Comput. and Applied Math., 21 (1988),
+       to appear.
+
+***********************************************************************
+
+   1988, February 15.
+

@@ -1,0 +1,103 @@
+   INTEGER FUNCTION : NSINGV
+
+ 1 PURPOSE:
+
+   The function NSINGV computes the number of singular values of the
+   bidiagonal matrix:
+
+             !Q(1) E(2)  .    ...    0  !
+             ! 0   Q(2) E(3)         .  !
+         J = !                       .  !                        (1)
+             !                      E(K)!
+             ! 0   ...           0  Q(K)!
+
+   which are <= THETA + TOL1, for given bound THETA and tolerance TOL1.
+
+ 2 SPECIFICATION:
+
+   INTEGER FUNCTION NSINGV(Q, E, K, THETA, TOL1, TOL2)
+   INTEGER K
+   DOUBLE PRECISION Q(K), E(K), THETA, TOL1, TOL2
+
+ 3 ARGUMENT LIST:
+
+   3.1 ARGUMENTS IN
+
+       Q - DOUBLE PRECISION array of DIMENSION (K).
+           Contains the diagonal entries of the bidiagonal matrix J.
+
+       E - DOUBLE PRECISION array of DIMENSION (K).
+           E(2),..., E(K) contains the superdiagonal entries of the
+           bidiagonal matrix J.
+
+       K - INTEGER.
+           Dimension of the bidiagonal matrix J.
+
+       THETA - DOUBLE PRECISION.
+           Given bound.
+
+   3.4 TOLERANCES
+
+       TOL1 - DOUBLE PRECISION.
+           This parameter specifies that all singular values S(i) of J
+           satisfying !S(i) - THETA! <= TOL1 are considered to be equal
+           to THETA.
+
+       TOL2 - DOUBLE PRECISION.
+           This parameter specifies that Q(i) and/or E(i), which are <=
+           TOL2 in absolute value, are considered to be zero.
+
+ 6 METHOD DESCRIPTION:
+
+   The computation of the number of singular values S(i) of J which
+   are <= THETA is based on applying Sylvester's Law of Inertia, or
+   equivalently, Sturm sequences [1,p.52] to unreduced symmetric
+   tridiagonal matrices associated with J.
+   Let T be the following symmetric matrix associated with J:
+
+              ! 0   J'!
+         T =  !       !
+              ! J   0 !
+
+   The eigenvalues of T are the singular values of J and their
+   negatives [4]. Then by permuting the rows and columns of T into
+   the order 1, K+1, 2, K+2,..., K, 2K it follows that T is orthogonally
+   similar to the tridiagonal matrix T" with zeros on its diagonal and
+   Q(1), E(2), Q(2), E(3), ..., E(K), Q(K) on its offdiagonals [3,4].
+   If all Q(i) and all E(i) are nonzero, Sylvester's Law of Inertia
+   may be applied to T".
+   If one or more Q(i) or E(i) are zero, then T" is block diagonal and
+   each diagonal block (which is then unreduced) must be analyzed
+   separately by applying Sylvester's Law of Inertia.
+
+ 7 REFERENCES:
+
+   [1] B.N. Parlett, The Symmetric Eigenvalue Problem. Prentice
+       Hall, Englewood Cliffs, New Jersey (1980).
+   [2] J. Demmel and W. Kahan, Computing Small Singular Values of
+       Bidiagonal Matrices with Guaranteed High Relative Accuracy.
+       Technical Report, Courant Inst., New York, Oct. 13  1987.
+   [3] S. Van Huffel  and J. Vandewalle, The Partial Total Least
+       Squares Algorithm. J. Comput. and Applied Math., 21 (1988),
+       to appear.
+   [4] G.H. Golub and W. Kahan, Calculating the Singular Values and
+       Pseudo-inverse of a Matrix. SIAM J. Numer. Anal., Ser.B, 2
+       (1965), 205 - 224.
+
+ 8 NUMERICAL ASPECTS:
+
+   S(i) could also be obtained with the use of the symmetric tridiagonal
+   matrix T = J'J, whose eigenvalues are the squared singular values
+   of J [4,p.213]. However, the method actually used is more accurate,
+   see [2], and equally efficient.
+
+   With respect to the accuracy the following holds, see [2]:
+   - if the established value is denoted by S then at least S singular
+     values of J are <= THETA/(1 - (3K-1.5)EPS) and no more than S
+     singular values are <= THETA x (1 - (6K-2)EPS)/(1 - (3K-1.5)EPS),
+     where EPS is the machine precision.
+
+***********************************************************************
+
+   1988, February 15.
+

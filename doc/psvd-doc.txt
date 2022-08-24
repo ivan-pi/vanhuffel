@@ -1,0 +1,448 @@
+***********************************************************************
+                        Fortran 77 Program
+                                of
+        the PARTIAL SINGULAR VALUE DECOMPOSITION ALGORITHM.
+        ---------------------------------------------------
+
+      Sabine VAN HUFFEL
+      ESAT Laboratory, KU Leuven.
+      Kardinaal Mercierlaan 94, 3030 Heverlee, Belgium.
+
+***********************************************************************
+
+   SUBROUTINE : PSVD
+
+ 1 PURPOSE:
+
+   The subroutine PSVD computes in an efficient and reliable way a basis
+   for the left and/or right singular subspace of a matrix corresponding
+   to its smallest singular values. The dimension of the desired sub-
+   space may be given or may depend on a given upper bound for those
+   smallest singular values.
+
+ 2 SPECIFICATION:
+
+   SUBROUTINE PSVD(A, LDA, M, N, RANK, THETA, U, LDU, V, LDV, Q, INUL,
+                   WRK, TOL1, TOL2, MODE, IERR, IWARN)
+   INTEGER LDA, M, N, RANK, LDU, LDV, MODE, IERR, IWARN
+   DOUBLE PRECISION THETA, TOL1, TOL2
+   DOUBLE PRECISION A(LDA,N), U(LDU,M), V(LDV,N),Q(min(M,N)+min(M+1,N)),
+                    WRK(*)
+   LOGICAL INUL(max(M,N))
+
+ 3 ARGUMENT LIST:
+
+   3.1 ARGUMENTS IN
+
+       A - DOUBLE PRECISION array of DIMENSION (LDA,N).
+           The leading M x N part of this array contains the matrix A
+           for which the basis of a desired singular subspace must be
+           computed.
+           NOTE that A is destroyed by PSVD.
+
+       LDA - INTEGER.
+           LDA is the leading dimension of the array A (LDA >= M).
+
+       M - INTEGER.
+           M is the number of rows of the matrix A.
+
+       N - INTEGER.
+           N is the number of columns of the matrix A.
+
+       RANK - INTEGER.
+           Specifies on entry whether the rank is given or is to be
+           computed.
+           i)  RANK <  0: the rank is to be computed (see THETA).
+           ii) RANK >= 0: specifies the given rank.
+               NOTE that RANK may be overwritten if A has multiple
+                    singular values.
+
+       THETA - DOUBLE PRECISION.
+           On entry, there are two possibilities (depending on RANK):
+           i)  RANK <  0: THETA specifies an upper bound on the smallest
+               singular values of A corresponding to the singular sub-
+               space to be computed. THETA >= 0.
+               THETA allows to compute the rank of A.
+           ii) RANK >= 0: THETA is an initial estimate for computing an
+               upper bound on the min(M,N) - RANK smallest singular
+               values of A.
+               If not available, assign a negative value (< 0) to THETA.
+               NOTE that THETA is overwritten.
+
+   3.2 ARGUMENTS OUT
+
+       RANK - INTEGER.
+           If not specified by the user, then RANK is computed by the
+           routine.
+           If specified by the user, then the specified RANK is changed
+           by the routine if the RANK-th and the (RANK+1)-th singular
+           value of A are considered to be equal.
+
+       THETA - DOUBLE PRECISION.
+           If RANK >= 0, then THETA specifies the computed upper bound
+           such that precisely RANK singular values of A are greater
+           than THETA + TOL1.
+
+       U - DOUBLE PRECISION array of DIMENSION (LDU,M).
+           The leading M x S part of this array (where S = min(M,N) or
+           S = M, depending on MODE) contains the S - RANK M-dimensional
+           base vectors of the desired left singular subspace of A cor-
+           responding to its singular values <= THETA.
+           These vectors are stored in those columns of U whose index i
+           corresponds with INUL(i) = .TRUE.
+           If 10 <= MODE <  20, then S = M.
+                    MODE >= 20, then S = min(M,N).
+              10 >  MODE      , then U is not referenced.
+           U may not be identified with A in the subroutine call.
+
+       LDU - INTEGER.
+           LDU is the leading dimension of the array U (LDU >= M).
+
+       V - DOUBLE PRECISION array of DIMENSION (LDV,N).
+           The leading N x S part of this array (where S = min(M,N) or
+           S = N, depending on MODE) contains the S - RANK N-dimensional
+           base vectors of the desired right singular subspace of A cor-
+           responding to its singular values <= THETA.
+           These vectors are stored in those columns of V whose index i
+           corresponds with INUL(i) = .TRUE.
+           If MODE mod 10 = 1, then S = N, else S = min(M,N).
+           If MODE mod 10 = 0, then V is not referenced.
+           V may not be identified with A in the subroutine call.
+
+       LDV - INTEGER.
+           LDV is the leading dimension of the array V (LDV >= N).
+
+       Q - DOUBLE PRECISION array of DIMENSION (min(M,N)+min(M+1,N)).
+           Returns the partially diagonalized bidiagonal computed from
+           A, at the moment that the desired singular subspace has been
+           found.
+           The first p = min(M,N) entries of Q contain the diagonal
+           elements q(1),...,q(p) and the entries Q(p+2),...,Q(p+s)
+           (with s = min(M+1,N)) contain the superdiagonal elements
+           e(2),...,e(s). Q(p+1) = 0.
+
+       INUL - LOGICAL array of DIMENSION (max(M,N)).
+           The indices of the elements of INUL with value .TRUE.
+           indicate the columns in U and/or V containing the base
+           vectors of the desired left and/or right singular subspace
+           of A, if computed. They also equal the indices of the diago-
+           gonal entries of the subbidiagonals in Q, corresponding to
+           the computed singular subspaces.
+
+   3.3 WORK SPACE
+
+       WRK - DOUBLE PRECISION array of DIMENSION (t).
+           If M < 5*N/3 or if no basis of a left singular subspace is
+           requested (i.e. if MODE < 10),
+           then t equals M + N,
+           else t equals M + N + N*(N+1)/2 in order to provide N*(N+1)/2
+                                           extra storage locations.
+
+   3.4 TOLERANCES
+
+       TOL1 - DOUBLE PRECISION.
+           This parameter defines the multiplicity of singular values by
+           considering all singular values within an interval of length
+           TOL1 as coinciding. TOL1 is used in checking how many singu-
+           lar values are <= THETA. Also in computing an appropriate
+           upper bound THETA by a bisection method, TOL1 is used as stop
+           criterion defining the minimal subinterval length.
+           According to the numerical properties of the SVD, TOL1 must
+           be >= !!A!! x EPS where !!A!! denotes the L2-norm and EPS
+           is the machine precision.
+
+       TOL2 - DOUBLE PRECISION.
+           Working precision for the computation of the desired singular
+           subspaces of A. This parameter specifies that elements of
+           matrices used in the computation, which are <= TOL2 in abso-
+           lute value, are considered to be zero.
+
+   3.5 MODE PARAMETER
+
+       MODE - INTEGER.
+           MODE controls the computation of the desired singular sub-
+           space. It has the decimal expansion AB with the following
+           meaning:
+           A = 0,  do not compute the left singular subspace.
+           A = 1,  return the M - RANK base vectors of the desired left
+                   singular subspace in U.
+           A >= 2, return the first min(M,N) - RANK base vectors of the
+                   desired left singular subspace in U.
+           B = 0,  do not compute the right singular subspace.
+           B = 1,  return the N - RANK base vectors of the desired
+                   right singular subspace in V.
+           B >= 2, return the first min(M,N) - RANK base vectors of the
+                   desired right singular subspace in V.
+
+   3.6 ERROR INDICATORS
+
+       IERR - INTEGER.
+           On return, IERR contains 0 unless the routine has failed.
+
+       IWARN - INTEGER.
+           On return, IWARN contains 0 unless RANK has been lowered by
+           the routine.
+
+ 4 ERROR INDICATORS and WARNINGS:
+
+   Errors detected by the routine.
+
+       IERR = 0: successful completion.
+              1: number M of rows of array A smaller than 1.
+              2: number N of columns of array A smaller than 1.
+              3: leading dimension LDA of array A smaller than M.
+              4: leading dimension LDU of array U smaller than M.
+              5: leading dimension LDV of array V smaller than N.
+              6: rank of matrix A (RANK) larger than min(M,N).
+              7: the parameters RANK and THETA are both negative (< 0).
+              8: tolerance TOL1 is negative.
+              9: tolerance TOL2 is negative.
+             10: maximum number of QR/QL iteration steps (50) exceeded.
+             11: parameter MODE out of range.
+
+   Warnings given by the routine.
+
+       IWARN = 0: no warnings.
+               1: the rank of matrix A, specified by the user, has been
+                  lowered because a singular value of multiplicity > 1
+                  has been found.
+
+ 5 EXTERNAL SUBROUTINES and FUNCTIONS:
+
+   DCOPY form BLAS [5];
+   DQRDC from LINPACK [6];
+   BIDIAG, INIT, CANCEL, QRQL, RESTOR.
+
+ 6 METHOD DESCRIPTION:
+
+   PSVD is an efficient method (see [1]), computing the singular sub-
+   space of a matrix corresponding to its smallest singular values. It
+   differs from the classical SVD algorithm [3] at three points, which
+   results in high efficiency.
+   First, the Householder transformations of the bidiagonalization need
+   only to be applied on the base vectors of the desired singular sub-
+   spaces.
+   Second, the bidiagonal needs only to be partially diagonalized.
+   Third, the convergence rate of the iterative diagonalization can be
+   improved by an appropriate choice between QL and QR iterations.
+   Depending on the gap, the desired numerical accuracy and the dimen-
+   sion of the desired singular subspace, PSVD can be three times faster
+   than the classical SVD algorithm.
+
+   The PSVD algorithm [1-2] for an M by N matrix A proceeds as follows:
+
+   Step 1: Bidiagonalization phase
+           -----------------------
+   1.a): If M >= 5*N/3, transform A into upper triangular form R.
+
+   1.b): Transform A (or R) into bidiagonal form:
+
+              !q(1) e(2)  0   ...  0  !
+         (0)  ! 0   q(2) e(3)      .  !
+        J   = ! .                  .  !
+              ! .                 e(N)!
+              ! 0            ...  q(N)!
+
+   if M >= N, or
+
+              !q(1) e(2)  0   ...  0     0   !
+         (0)  ! 0   q(2) e(3)      .     .   !
+        J   = ! .                  .     .   !
+              ! .                 e(M)   .   !
+              ! 0            ...  q(M) e(M+1)!
+
+   if M < N, using Householder transformations.
+
+   1.c): If U is requested, initialize U with the identity matrix.
+         If V is requested, initialize V with the identity matrix.
+
+   1.d): If M < N, then cancel e(M+1), and reduce the bidiagonal to
+         M x M. Accumulate the Givens rotations in V (if V is desired).
+
+   Step 2: Partial diagonalization phase
+           -----------------------------
+   If the upper bound THETA is not given, then compute THETA such that
+   precisely p - RANK singular values (p=min(M,N)) of the bidiagonal
+   are <= THETA, using a bisection method [4].
+   Diagonalize the given bidiagonal J partially, using either QL itera-
+   tions (if the upper left diagonal element of the considered subbi-
+   diagonal > the lower right diagonal element) or QR iterations, such
+   that J is splitted into unreduced subbidiagonals whose singular
+   values are either all larger than THETA or all less than or equal to
+   THETA.
+   Accumulate the Givens rotations in U and/or V (if desired).
+
+   Step 3: Back transformation phase
+           -------------------------
+   3.a): Apply the Householder transformations of step 1.b) onto the
+         columns of U and/or V associated with the subbidiagonals with
+         all singular values <= THETA, (if U and/or V is desired).
+
+   3.b): If M >= 5*N/3 and U is desired, then apply the Householder
+         transformations of step 1.a) onto each computed column of U in
+         step 3.a).
+
+   NOTE. If M > N (resp.,M < N), then the base vectors of the orthogonal
+   complement of the column (resp.,row) space of the M by N matrix A can
+   also be computed if desired (see MODE) by applying step 3 onto the
+   last M - N (resp.,N - M) columns of U (resp.,V).
+
+ 7 REFERENCES:
+
+   [1] S. Van Huffel, J. Vandewalle and A. Haegemans, An efficient and
+       reliable algorithm for computing the singular subspace of a
+       matrix associated with its smallest singular values.
+       J. Comput. and Applied Math., 19 (1987), 313 - 330.
+   [2] S. Van Huffel, Analysis of the total least squares problem and
+       its use in parameter estimation. Doctoral dissertation, Dept. of
+       Electr. Eng., K.U.Leuven, June 1987.
+   [3] T.F.Chan, An improved algorithm for computing the singular value
+       decomposition. ACM Trans. Math. Software, 8 (1982), 72-83.
+   [4] S. Van Huffel and J. Vandewalle, The Partial Total Least
+       Squares Algorithm. J. Comput. and Applied Math., 21 (1988), to
+       appear.
+   [5] C.L. Lawson, R.J. Hanson, F.T. Krogh and O.R. Kincaid, Basic Lin-
+       ear Algebra Subprograms for FORTRAN Usage. ACM Trans. Math. Soft-
+       ware, 5 (1979), 308-323.
+   [6] J.J. Dongarra, J.R. Bunch, C.B. Moler and G.W. Stewart, LINPACK
+       User's Guide. SIAM, Philadelphia (1979).
+
+ 8 NUMERICAL ASPECTS:
+
+   Using PSVD a large reduction in computation time can be gained in
+   total least squares applications (cf [2 - 4]), in the computation of
+   the null space of a matrix and in solving (non)homogeneous linear
+   equations.
+
+ 9 EXAMPLE:
+
+   9.1 PROGRAM TEXT
+
+       PARAMETER (IN = 5, IOUT = 6)
+       PARAMETER (LDA = 30, LDU = 30, LDV = 11, LN = 11, LM = 30,
+      *           LQ = 22, LW = 107, LINUL = 30)
+       INTEGER M, N, RANK, MODE, IERR, IWARN
+       DOUBLE PRECISION A(LDA,LN), U(LDU,LM), V(LDV,LN), Q(LQ),
+      *       WRK(LW),
+      *       TOL1, TOL2, THETA
+       INTRINSIC MIN
+       LOGICAL INUL(LINUL)
+       INTEGER I, J, K
+       READ(IN,12) M, N, RANK, THETA
+       WRITE(IOUT,13) M, N, RANK, THETA
+       WRITE(IOUT,9)
+       DO 1 I = 1, M
+          READ(IN,5) (A(I,J), J = 1, N)
+   1   CONTINUE
+       WRITE(IOUT,6)
+       DO 2 I = 1, M
+          WRITE(IOUT,7) (A(I,J), J = 1, N)
+   2   CONTINUE
+       MODE = 11
+       TOL1 = 1.0D-08
+       TOL2 = 1.0D-10
+       CALL PSVD(A, LDA, M, N, RANK, THETA, U, LDU, V, LDV, Q, INUL,
+      *          WRK, TOL1, TOL2, MODE, IERR, IWARN)
+       WRITE(IOUT,8) IERR, IWARN
+       WRITE(IOUT,18) RANK, THETA
+       K = MIN(M,N)
+       WRITE(IOUT,10) (Q(I), I = 1, K)
+       WRITE(IOUT,11) (Q(K+I), I = 2, K)
+       WRITE(IOUT,14)
+       K = 0
+       DO 3 I = 1, M
+          IF (INUL(I)) THEN
+             K = K + 1
+             WRITE(IOUT,15) K, I
+             WRITE(IOUT,7) (U(J,I), J = 1, M)
+          END IF
+   3   CONTINUE
+       WRITE(IOUT,16)
+       K = 0
+       DO 4 I = 1, N
+          IF (INUL(I)) THEN
+             K = K + 1
+             WRITE(IOUT,17) K, I
+             WRITE(IOUT,7) (V(J,I), J = 1, N)
+          END IF
+   4   CONTINUE
+       STOP
+   5   FORMAT(4D15.0)
+   6   FORMAT(/' ',5X,'A(*,I)',8X,'A(*,I+1)',7X,'A(*,I+2)',7X,
+      *       'A(*,I+3)')
+   7   FORMAT(' ',4D15.6)
+   8   FORMAT(/' IERR = ',I3,'   IWARN = ',I3)
+   9   FORMAT(/' PARTIAL SVD (PSVD) TEST PROGRAM'/' ',32('-')/)
+  10   FORMAT(/' DIAGONAL OF THE PARTIALLY DIAGONALIZED BIDIAGONAL='
+      *       /(1X,4D15.6))
+  11   FORMAT(/' SUPERDIAGONAL OF THE PARTIALLY DIAGONALIZED ',
+      *       'BIDIAGONAL=',/(1X,4D15.6))
+  12   FORMAT(3I3,D12.5)
+  13   FORMAT(/' M =',I3,'  N =',I3,'  RANK =',I3,'  THETA =',D12.5)
+  14   FORMAT(/' BASIS OF THE COMPUTED LEFT SINGULAR SUBSPACE :'/1X,
+      *       44('-'))
+  15   FORMAT(' THE ',I2,'-TH BASE VECTOR U(*,',I2,') =')
+  16   FORMAT(/' BASIS OF THE COMPUTED RIGHT SINGULAR SUBSPACE :'/1X,
+      *       45('-'))
+  17   FORMAT(' THE ',I2,'-TH BASE VECTOR V(*,',I2,') =')
+  18   FORMAT(/' COMPUTED RANK =',I3,4X,' COMPUTED BOUND THETA = ',
+      *       D12.5)
+       END
+
+   9.2 PROGRAM DATA
+
+        6  4 -1 1.00000D-03
+       0.80010002D+00 0.39985167D+00 0.60005390D+00 0.89999446D+00
+       0.29996484D+00 0.69990689D+00 0.39997269D+00 0.82997570D+00
+       0.49994235D+00 0.60003167D+00 0.20012361D+00 0.79011189D+00
+       0.90013643D+00 0.20016919D+00 0.79995025D+00 0.85002662D+00
+       0.39998539D+00 0.80006338D+00 0.49985474D+00 0.99016399D+00
+       0.20002274D+00 0.90007114D+00 0.70009777D+00 0.10299439D+01
+
+   9.3 PR0GRAM RESULTS:
+
+       M =  6  N =  4  RANK = -1  THETA = 0.10000D-02
+
+       PARTIAL SVD (PSVD) TEST PROGRAM
+       --------------------------------
+
+
+            A(*,I)        A(*,I+1)       A(*,I+2)       A(*,I+3)
+          0.800100D+00   0.399852D+00   0.600054D+00   0.899994D+00
+          0.299965D+00   0.699907D+00   0.399973D+00   0.829976D+00
+          0.499942D+00   0.600032D+00   0.200124D+00   0.790112D+00
+          0.900136D+00   0.200169D+00   0.799950D+00   0.850027D+00
+          0.399985D+00   0.800063D+00   0.499855D+00   0.990164D+00
+          0.200023D+00   0.900071D+00   0.700098D+00   0.102994D+01
+
+       IERR =   0   IWARN =   0
+
+       COMPUTED RANK =  3     COMPUTED BOUND THETA =  0.10000D-02
+
+       DIAGONAL OF THE PARTIALLY DIAGONALIZED BIDIAGONAL=
+          0.322802D+01   0.871401D+00   0.369809D+00   0.128626D-03
+
+       SUPERDIAGONAL OF THE PARTIALLY DIAGONALIZED BIDIAGONAL=
+          0.286516D-01   0.167536D-01  -0.739580D-22
+
+       BASIS OF THE COMPUTED LEFT SINGULAR SUBSPACE :
+       --------------------------------------------
+       THE  1-TH BASE VECTOR U(*, 4) =
+          0.269797D+00   0.153118D+00  -0.536944D+00  -0.186820D+00
+          0.642075D+00  -0.410236D+00
+       THE  2-TH BASE VECTOR U(*, 5) =
+         -0.578307D+00  -0.456351D+00   0.180389D+00   0.336878D+00
+          0.552879D+00  -0.748493D-01
+       THE  3-TH BASE VECTOR U(*, 6) =
+          0.484175D+00  -0.742503D+00   0.646079D-01  -0.334913D+00
+          0.115913D+00   0.290665D+00
+
+       BASIS OF THE COMPUTED RIGHT SINGULAR SUBSPACE :
+       ---------------------------------------------
+       THE  1-TH BASE VECTOR V(*, 4) =
+         -0.355483D+00  -0.568663D+00  -0.212821D+00   0.710606D+00
+
+***********************************************************************
+
+   1988, February 15.
+
