@@ -18,7 +18,7 @@ C     .. External Subroutines/Functions ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS, MAX, MIN
 C     .. Local Scalars ..
-      INTEGER P, NL, PP1, J1, MC, NJ, K, II, I1, N1, MNL1
+      INTEGER I, J, P, NL, PP1, J1, MC, NJ, K, II, I1, N1, MNL1
       DOUBLE PRECISION TEMP, HH, INPROD
       LOGICAL ZERO
 C     .. Local Arrays ..
