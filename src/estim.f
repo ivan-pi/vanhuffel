@@ -16,7 +16,7 @@ C     .. External Subroutines/Functions ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS, MAX
 C     .. Local Scalars ..
-      INTEGER NUM, I, J, NUMZ
+      INTEGER NUM, I, NUMZ
       DOUBLE PRECISION TH, H1, H2, Y, Z, SUMZ
 C     .. Executable Statements ..
 C
@@ -57,13 +57,13 @@ C
          TH = ABS(Q(1))
          Z = TH
          NUMZ = N
-         DO 1 I = 2, N
+         DO 10 I = 2, N
             H1 = ABS(E(I))
             H2 = ABS(Q(I))
             SUMZ = MAX(TH + H1, H2 + H1)
             IF (SUMZ .GT. Z) Z = SUMZ
             TH = H2
-   1     CONTINUE
+   10    CONTINUE
       ELSE
          Z = THETA
          Y = 0.0D0
@@ -79,7 +79,7 @@ C     NUM : number of S(i) <= TH,
 C     NUMZ: number of S(i) <= Z.
 C
 C     WHILE ((NUM .NE. L) .AND. (Z-Y) .GT. TOL1) DO
-   2  IF ((NUM .NE. L) .AND. (Z-Y) .GT. TOL1) THEN
+   20 IF ((NUM .NE. L) .AND. (Z-Y) .GT. TOL1) THEN
          TH = (Y + Z)/2.0D0
          NUM = NSINGV(Q, E, N, TH, TOL1, TOL2)
          IF (NUM .LT. L) THEN
@@ -88,7 +88,7 @@ C     WHILE ((NUM .NE. L) .AND. (Z-Y) .GT. TOL1) DO
             Z = TH
             NUMZ = NUM
          END IF
-         GOTO 2
+         GOTO 20
       END IF
 C     END WHILE 2
 C
