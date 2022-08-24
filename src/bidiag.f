@@ -14,7 +14,7 @@ C     .. External Subroutines/Functions ..
 C     .. Intrinsic Functions ..
       INTRINSIC MAX, MIN, SIGN
 C     .. Local Scalars ..
-      INTEGER NCT, NRT, LU, L, LP1, J, I, LL, NPP, PP1, M
+      INTEGER NCT, NRT, LU, L, LP1, J, I, NPP, PP1, M
       DOUBLE PRECISION T
 C     .. Executable Statements ..
 C
