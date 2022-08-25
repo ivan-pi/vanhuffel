@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(vanhuffel VERSION 0.1.0 LANGUAGES Fortran)
+project(vanhuffel 
+    VERSION 0.1.0 
+    LANGUAGES Fortran
+    DESCRIPTION "Partial Total Least Squares Routines by Sabine Van Huffel")
 
 add_library(vanhuffel
     src/bidiag.f
@@ -20,5 +23,8 @@ add_library(vanhuffel
     src/tr2.f
     )
 
-target_link_libraries(vanhuffel PRIVATE linpack)
+include(FindBLAS REQUIRED)
 target_link_libraries(vanhuffel PRIVATE blas)
+target_link_libraries(vanhuffel PRIVATE linpack)
+
+add_subdirectory(examples EXCLUDE_FROM_ALL)

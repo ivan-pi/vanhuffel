@@ -1,6 +1,6 @@
 These codes were written in connection with the Ph.D. thesis
 Sabine Van Huffel, 1987, Katholieke Universiteit Leuven.  A revised and
-expanded version of the thesis is in SIAM Frotiers book series.
+expanded version of the thesis is in SIAM Frontiers book series.
 This particular version was received on 21 March 1988.
 
 The primary routines to be called by the user are dtls, psvd, and ptls.
