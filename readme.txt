@@ -24,3 +24,6 @@ are available directly.  To include them in your return mail, say
     send dtls from vanhuffel linpack blas.
     send dtls-doc from vanhuffel
 
+The routines required from BLAS include: DSCAL, DNRM2, DDOT, DAXPY, DROT, DCOPY. 
+
+The routines required from LINPACK are DQRDC, DSVDC
