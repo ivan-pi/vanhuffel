@@ -85,18 +85,18 @@ C     of U.
 C
       IM = MIN(M-1,N)
       IF (WANTU .AND. (IM .GT. 0)) THEN
-         DO 20 I = 1, M
+         DO I = 1, M
             IF (INUL(I)) THEN
-               DO 10 LL = 1, IM
+               DO LL = 1, IM
                   L = IM - LL + 1
                   IF (ABS(X(L,L)) .GT. TOL) THEN
                      ML1 = M - L + 1
                      T = -DDOT(ML1, X(L,L), 1, U(L,I), 1)/X(L,L)
                      CALL DAXPY(ML1, T, X(L,L), 1, U(L,I), 1)
                   END IF
-   10          CONTINUE
+               END DO
             END IF
-   20    CONTINUE
+         END DO
       END IF
 C
 C     Apply the Householder transformations Qj onto the desired columns
@@ -104,9 +104,9 @@ C     of V.
 C
       IM = MIN(N-2,M)
       IF (WANTV .AND. (IM .GT. 0)) THEN
-         DO 40 I = 1, N
+         DO I = 1, N
             IF (INUL(I)) THEN
-               DO 30 LL = 1, IM
+               DO LL = 1, IM
                   L = IM - LL + 1
                   L1 = L + 1
                   IF (ABS(X(L,L1)) .GT. TOL) THEN
@@ -114,9 +114,9 @@ C
                      T = -DDOT(NL1, X(L,L1), LDX, V(L1,I), 1)/X(L,L1)
                      CALL DAXPY(NL1, T, X(L,L1), LDX, V(L1,I), 1)
                   END IF
-   30          CONTINUE
+               END DO
             END IF
-   40    CONTINUE
+         END DO
       END IF
       RETURN
 C *** Last line of RESTOR *********************************************

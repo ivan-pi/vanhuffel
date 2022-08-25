@@ -40,15 +40,16 @@ C     .. Local Scalars ..
       DOUBLE PRECISION INPROD, Y
 C     .. Executable Statements ..
 C
-      DO 20 I = I1, I2
+      DO I = I1, I2
          INPROD = 0.0D0
-         DO 10 J = 1, J2
+         DO J = 1, J2
             INPROD = INPROD + U(J) * A(I,J1+J)
-   10    CONTINUE
+         END DO
          Y = INPROD * S
-         DO 20 J = 1, J2
+         DO J = 1, J2
             A(I,J1+J) = A(I,J1+J) - U(J) * Y
-   20 CONTINUE
+         END DO
+      END DO
       RETURN
 C *** Last line of TR2 ************************************************
       END

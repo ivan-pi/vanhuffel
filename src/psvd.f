@@ -58,14 +58,14 @@ C
       END IF
 C
       K = MAX(M,N)
-      DO 1 I = 1, K
+      DO I = 1, K
          INUL(I) = .FALSE.
-   1  CONTINUE
+      END DO
       IF (ALL .AND. (.NOT.QR)) THEN
          PP1 = P + 1
-         DO 2 I = PP1, K
+         DO I = PP1, K
             INUL(I) = .TRUE.
-   2     CONTINUE
+         END DO
       END IF
 C
 C     Step 1: Bidiagonalization phase
@@ -83,7 +83,7 @@ C        of work array WRK.
 C
          K = M + N + 1
          NM1 = N - 1
-         DO 4 J = 1, NM1
+         DO J = 1, NM1
             J1 = J + 1
             IF (WANTU) THEN
                NJ = N - J
@@ -92,10 +92,10 @@ C
                CALL DCOPY(NJ, A(J1,J), 1, WRK(K), 1)
                K = K + NJ
             END IF
-            DO 3 I = J1, N
+            DO I = J1, N
                A(I,J) = 0.0D0
-   3        CONTINUE
-   4     CONTINUE
+            END DO
+         END DO
          IF (WANTU) WRK(K) = Q(N)
          MA = N
       END IF
@@ -151,17 +151,17 @@ C
       IF (QR .AND. WANTU) THEN
          IF (ALL) THEN
             J = P + 1
-            DO 5 I = J, M
+            DO I = J, M
                INUL(I) = .TRUE.
-   5        CONTINUE
+            END DO
          END IF
          K = M + N + 1
          I = N
-         DO 6 J = 1, N
+         DO J = 1, N
             CALL DCOPY(I, WRK(K), 1, A(J,J), 1)
             K = K + I
             I = I - 1
-   6     CONTINUE
+         END DO
          CALL RESTOR(A, LDA, M, N, U, LDU, WRK, 1, INUL, TOL2, .TRUE.,
      *               .FALSE.)
       END IF

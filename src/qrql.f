@@ -39,9 +39,9 @@ C
 C
       MAXIT = 50
       RANK = P
-      DO 1 I = 1, P
+      DO I = 1, P
          IF (INUL(I)) RANK = RANK - 1
-   1  CONTINUE
+      END DO
       E(1) = 0.0D0
 C
 C     From now K is the smallest known index such that the subbidia-
@@ -129,9 +129,9 @@ C           C1 or C2. Treat this subbidiagonal.
 C
             IF (J .GE. 2) THEN
                IF (NUMEIG .EQ. J) THEN
-                  DO 6 I1 = I, K
+                  DO I1 = I, K
                      INUL(I1) = .TRUE.
-   6              CONTINUE
+                  END DO
                   RANK = RANK - J
                   K = K - J
                ELSE

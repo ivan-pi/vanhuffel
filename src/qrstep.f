@@ -115,7 +115,7 @@ C
       C = 1.0D0
       S = 1.0D0
       I1 = I + 1
-      DO 10 J = I1, K
+      DO J = I1, K
          LL = J - 1
          G = E(J)
          Y = Q(J)
@@ -137,7 +137,7 @@ C
          F = C * G + S * Y
          X = -S * G + C * Y
          IF (WANTU) CALL DROT(M, U(1,LL), 1, U(1,J), 1, C, S)
-   10 CONTINUE
+      END DO
       E(K) = F
       Q(K) = X
       E(I) = 0.0D0

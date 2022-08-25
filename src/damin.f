@@ -41,10 +41,10 @@ C
 C
       IX = 1 + INCX
       NINCX = NX*INCX
-      DO 1 I = IX, NINCX, INCX
+      DO I = IX, NINCX, INCX
          DX = ABS(X(I))
          IF (DX .LT. DAMIN) DAMIN = DX
-    1 CONTINUE
+      END DO
       RETURN
 C *** Last line of DAMIN **********************************************
       END

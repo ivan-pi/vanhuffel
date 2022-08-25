@@ -29,12 +29,12 @@ C     .. Local Scalars ..
       INTEGER I, J
 C     .. Executable Statements ..
 C
-      DO 20 J = 1, N
-         DO 10 I = 1, M
+      DO J = 1, N
+         DO I = 1, M
             X(I,J) = 0.0D0
-   10    CONTINUE
+         END DO
          X(J,J) = 1.0D0
-   20 CONTINUE
+      END DO
       RETURN
 C *** Last line of INIT ***********************************************
       END

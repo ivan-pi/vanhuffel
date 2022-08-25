@@ -59,11 +59,11 @@ C
 C
 C     Initialize the solution matrix X.
 C
-      DO 2 J = 1, L
-         DO 1 I = 1, N
+      DO J = 1, L
+         DO I = 1, N
             X(I,J) = 0.0D0
-   1     CONTINUE
-   2  CONTINUE
+         END DO
+      END DO
 C
 C     Subroutine DTLS solves a set of linear equations by a Total Least
 C     Squares Approximation.
@@ -76,12 +76,12 @@ C
       MC = M
       IF (3*M .GE. 5*NL) THEN
          CALL DQRDC(C, LDC, M, NL, S, DUMAR1, WRK, 0)
-         DO 4 J = 1, NL
+         DO J = 1, NL
             J1 = J + 1
-            DO 3 I = J1, NL
+            DO I = J1, NL
                C(I,J) = 0.0D0
-   3        CONTINUE
-   4     CONTINUE
+            END DO
+         END DO
          MC = NL
       END IF
 C                                     T
@@ -160,15 +160,15 @@ C     Step 4: Solve X F = -Y by forward elimination,
 C             (F is upper triangular).
 C
       CALL DAXPY(N, -1.0D0/C(N1,N1), C(1,N1), 1, X, 1)
-      DO 11 J = 2, L
+      DO J = 2, L
          NJ = N + J
          TEMP = C(NJ,NJ)
          J1 = J - 1
-         DO 10 I = 1, N
+         DO I = 1, N
             X(I,J) = -(C(I,NJ) + DDOT(J1, C(N1,NJ), 1, X(I,1), LDX))
      *              /TEMP
-  10     CONTINUE
-  11  CONTINUE
+         END DO
+      END DO
       RETURN
 C *** Last line of DTLS ***********************************************
       END

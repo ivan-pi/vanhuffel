@@ -51,9 +51,9 @@ C     .. Executable Statements ..
 C
       ZERO = .TRUE.
       S = 0.0D0
-      DO 10 I = 1, K
+      DO I = 1, K
          S = S + DUMMY(I)**2
-   10 CONTINUE
+      END DO
       ALFA = SQRT(S)
       IF (ALFA .LE. TOL) RETURN
       ZERO = .FALSE.

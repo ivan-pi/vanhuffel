@@ -147,7 +147,7 @@ C
          C = 0.0D0
          S = 1.0D0
          I1 = I + 1
-         DO 1 L = I1, K
+         DO L = I1, K
             G = E(L)
             F = S * G
             E(L) = C * G
@@ -158,7 +158,7 @@ C
             C = G/H
             S = -F/H
             IF (WANTU) CALL DROT(M, U(1,I), 1, U(1,L), 1, C, S)
-    1    CONTINUE
+         END DO
       END IF
 C
 C     Annihilate E(I) (if I > 1).
@@ -167,7 +167,7 @@ C
          I1 = I - 1
          F = E(I)
          E(I) = 0.0D0
-         DO 3 L1 = 1, I1
+         DO L1 = 1, I1
             IF (ABS(F) .LE. TOL) RETURN
             L = I - L1
             G = Q(L)
@@ -184,7 +184,7 @@ C
             F = S * G
             E(L) = C * G
             IF (WANTV) CALL DROT(N, V(1,I), 1, V(1,L), 1, C, S)
-    3    CONTINUE
+         END DO
          E(1) = 0.0D0
       END IF
       RETURN

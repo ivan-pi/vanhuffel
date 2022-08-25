@@ -44,21 +44,22 @@ C
       NL = N + L
       MNL1 = M + NL + 1
       P = MIN(M,NL)
-      DO 1 I = 1, P
+      DO I = 1, P
          INUL(I) = .FALSE.
          LWRK(I) = .FALSE.
-   1  CONTINUE
+      END DO
 
       PP1 = P + 1
-      DO 2 I = PP1, NL
+      DO I = PP1, NL
          INUL(I) = .TRUE.
          LWRK(I) = .FALSE.
-   2  CONTINUE
+      END DO
 C
-      DO 3 J = 1, L
-         DO 3 I = 1, N
+      DO J = 1, L
+         DO I = 1, N
             X(I,J) = 0.0D0
-   3  CONTINUE
+         END DO
+      END DO
 C
 C     Subroutine PTLS solves a set of linear equations by a Total Least
 C     Squares Approximation, based on the Partial SVD.
@@ -71,11 +72,12 @@ C
       MC = M
       IF (3*M .GE. 5*NL) THEN
          CALL DQRDC(C, LDC, M, NL, Q, DUMAR1, WRK, 0)
-         DO 4 J = 1, NL
+         DO J = 1, NL
             J1 = J + 1
-            DO 4 I = J1, NL
+            DO I = J1, NL
                C(I,J) = 0.0D0
-   4     CONTINUE
+            END DO
+         END DO
          MC = NL
       END IF
 C
@@ -90,12 +92,12 @@ C
       MC = MIN(NL-2,M)
       IF (MC .GT. 0) THEN
          K = MNL1
-         DO 5 II = 1, MC
+         DO II = 1, MC
             J = MC - II + 1
             NJ = NL - J
             CALL DCOPY(NJ, C(J,J+1), LDC, WRK(K), 1)
             K = K + NJ
-   5     CONTINUE
+         END DO
       END IF
 C
 C     1.c): Initialize the right singular base matrix V with the identi-
@@ -135,10 +137,10 @@ C        med onto the rows of C during the bidiagonalization phase, to
 C        the selected base vectors in the right singular base matrix
 C        of C.
 C
-         DO 8 I = 1, NL
+         DO I = 1, NL
             IF (INUL(I) .AND. (.NOT. LWRK(I))) THEN
                K = MNL1
-               DO 7 II = 1, MC
+               DO II = 1, MC
                   J = MC - II + 1
                   NJ = NL - J
                   J1 = J + 1
@@ -147,21 +149,21 @@ C
                      CALL DAXPY(NJ, TEMP, WRK(K), 1, C(J1,I), 1)
                      K = K + NJ
                   END IF
-   7           CONTINUE
+               END DO
                LWRK(I) = .TRUE.
             END IF
-   8     CONTINUE
+         END DO
          IF (RANK.LE.0) RETURN
 C
 C        Step 4: Compute matrices F and Y using Householder transf. Q.
 C                ------------------------
          K = 0
-         DO 9 I = 1, NL
+         DO I = 1, NL
             IF (INUL(I)) THEN
                K = K + 1
                IWRK(K) = I
             END IF
-   9     CONTINUE
+         END DO
 C
          IF (K .LT. L) THEN
 C
@@ -177,9 +179,9 @@ C
 C
 C        WHILE ((K > 1) .AND. (I > N) .AND. (.NOT.ZERO)) DO
    10    IF ((K.GT.1) .AND. (I.GT.N) .AND. (.NOT.ZERO)) THEN
-            DO 11 J = 1, K
+            DO J = 1, K
                WRK(J) = C(I,IWRK(J))
-   11       CONTINUE
+            END DO
 C
 C           Compute Householder transformation.
 C
@@ -189,16 +191,17 @@ C
 C              Apply Householder transformation onto the selected base
 C              vectors.
 C
-               DO 13 I1 = 1, I
+               DO I1 = 1, I
                   INPROD = 0.0D0
-                  DO 12 J = 1, K
+                  DO J = 1, K
                      INPROD = INPROD + WRK(J) * C(I1,IWRK(J))
-   12             CONTINUE
+                  END DO
                   HH = INPROD * TEMP
-                  DO 13 J = 1, K
+                  DO J = 1, K
                      J1 = IWRK(J)
                      C(I1,J1) = C(I1,J1) - WRK(J) * HH
-   13          CONTINUE
+                  END DO
+               END DO
 C
                K = K - 1
             END IF
@@ -226,14 +229,14 @@ C     Solve X F = -Y  by forward elimination  (F is upper triangular).
       NJ = IWRK(K)
       CALL DAXPY(N, -1.0D0/C(N1,NJ), C(1,NJ), 1, X, 1)
 
-      DO 15 J = 2, L
+      DO J = 2, L
          J1 = J - 1
          NJ = IWRK(K+J1)
          TEMP = C(N+J,NJ)
-         DO 14 I = 1, N
+         DO I = 1, N
             X(I,J) = -(C(I,NJ) + DDOT(J1,C(N1,NJ),1,X(I,1),LDX))/TEMP
-  14     CONTINUE
-  15  CONTINUE
+         END DO
+      END DO
       RETURN
 C *** Last line of PTLS ***********************************************
       END

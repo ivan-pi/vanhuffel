@@ -118,7 +118,7 @@ C
       C = 1.0D0
       S = 1.0D0
       IK = K - I
-      DO 10 JJ = 1, IK
+      DO JJ = 1, IK
          J = K - JJ
          LL= J + 1
          G = E(LL)
@@ -141,7 +141,7 @@ C
          F = C * G + S * Y
          X = -S * G + C * Y
          IF (WANTV) CALL DROT(N, V(1,LL), 1, V(1,J), 1, C, S)
-   10 CONTINUE
+      END DO
       E(I+1) = F
       Q(I) = X
       IF (K .LT. MIN(M,N)) E(K+1) = 0.0D0

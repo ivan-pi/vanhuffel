@@ -26,7 +26,7 @@ C
       NCT = MIN(N-1,P)
       NRT = MAX(0,MIN(P-2,N))
       LU = MAX(NCT,NRT)
-      DO 7 L = 1, LU
+      DO L = 1, LU
          LP1 = L + 1
          IF (L .LE. NCT) THEN
 C
@@ -42,7 +42,7 @@ C
             Q(L) = -Q(L)
          END IF
 C
-         DO 2 J = LP1, P
+         DO J = LP1, P
             IF (L .GT. NCT) GO TO 1
             IF (Q(L) .EQ. 0.0D0) GO TO 1
 C
@@ -56,7 +56,7 @@ C           Place the L-th row of X into WRK for the subsequent
 C           calculation of the row transformation.
 C
             WRK(J) = X(L,J)
-    2    CONTINUE
+         END DO
          IF (L .LE. NRT) THEN
 C
 C           Compute the L-th row transformation and place the L-th
@@ -74,21 +74,21 @@ C
 C
 C              Apply the transformation.
 C
-               DO 3 I = PP1, NPP
+               DO I = PP1, NPP
                   WRK(I) = 0.0D0
-    3          CONTINUE
-               DO 4 J = LP1, P
+               END DO
+               DO J = LP1, P
                   CALL DAXPY(N-L, WRK(J), X(LP1,J), 1, WRK(PP1),1)
-    4          CONTINUE
-               DO 5 J = LP1, P
+               END DO
+               DO J = LP1, P
                   CALL DAXPY(N-L,-WRK(J)/WRK(LP1),WRK(PP1),1,X(LP1,J),1)
-    5          CONTINUE
+               END DO
             END IF
-            DO 6 I = LP1, P
+            DO I = LP1, P
                X(L,I) = WRK(I)
-    6       CONTINUE
+            END DO
          END IF
-    7 CONTINUE
+      END DO 
 C
 C     Set up the final bidiagonal matrix elements, if necessary.
 C

@@ -57,13 +57,13 @@ C
          TH = ABS(Q(1))
          Z = TH
          NUMZ = N
-         DO 10 I = 2, N
+         DO I = 2, N
             H1 = ABS(E(I))
             H2 = ABS(Q(I))
             SUMZ = MAX(TH + H1, H2 + H1)
             IF (SUMZ .GT. Z) Z = SUMZ
             TH = H2
-   10    CONTINUE
+         END DO
       ELSE
          Z = THETA
          Y = 0.0D0

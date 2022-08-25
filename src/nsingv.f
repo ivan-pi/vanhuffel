@@ -29,7 +29,7 @@ C
          IF (R .GT. 0.0D0) NUMEIG = NUMEIG - 1
       END IF
 C
-      DO 1 J = 2, K
+      DO J = 2, K
          IF (ABS(E(J)) .LE. TOL2) THEN
             R = T
          ELSE
@@ -42,7 +42,7 @@ C
             R = T - Q(J) * (Q(J)/R)
             IF (R .GT. 0.0D0) NUMEIG = NUMEIG - 1
          END IF
-    1 CONTINUE
+      END DO
 C
       NSINGV = NUMEIG
       RETURN
